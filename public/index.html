@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Logs</title>
+</head>
+<body>
+    <h1>Real-Time Logs</h1>
+    <pre id="logs"></pre>
+
+    <script>
+        // Connect to the SSE endpoint
+        const eventSource = new EventSource('/logs');
+
+        // Listen for log messages
+        eventSource.onmessage = (event) => {
+            console.log("event.data");
+            console.log(event.data);
+            const logsElement = document.getElementById('logs');
+            logsElement.textContent += event.data + '\n';
+            logsElement.scrollTop = logsElement.scrollHeight; // Auto-scroll
+        };
+
+        // Handle errors
+        eventSource.onerror = (error) => {
+            console.error('SSE error:', error);
+            eventSource.close();
+        };
+    </script>
+</body>
+</html>
