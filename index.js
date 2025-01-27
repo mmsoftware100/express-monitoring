@@ -1,7 +1,9 @@
 const express = require('express');
 const winston = require('winston');
 const { PassThrough } = require('stream');
+const bodyParser = require('body-parser');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
 
@@ -30,6 +32,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(express.json()); // Parse JSON request bodies
 
+
+
+/*
 app.use((req, res, next) => {
     const { method, originalUrl, ip, body } = req;
     const timestamp = new Date().toISOString();
@@ -41,6 +46,41 @@ app.use((req, res, next) => {
         url: originalUrl,
         ip,
         body: method === 'POST' ? body : undefined, // Log body for POST requests
+        timestamp,
+    });
+
+    next();
+});
+*/
+app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
+
+// Use multer globally for all requests
+// Initialize multer to handle multipart/form-data globally
+const upload = multer(); // No storage configuration, as we're not saving files
+app.use((req, res, next) => {
+    if (req.headers['content-type']?.startsWith('multipart/form-data')) {
+        // If the request is multipart/form-data, use multer to parse it
+        upload.none()(req, res, next);
+    } else {
+        // Otherwise, proceed to the next middleware
+        next();
+    }
+});
+
+// Middleware to log all requests
+app.use((req, res, next) => {
+    const { method, originalUrl, ip } = req;
+    const timestamp = new Date().toISOString();
+
+    // Log the request details
+    logger.info({
+        message: 'Request received',
+        // headers: req.headers,
+        method,
+        url: originalUrl,
+        ip,
+        body: req.body, // Log raw body if available
         timestamp,
     });
 
